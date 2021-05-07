@@ -6,7 +6,7 @@ def read_file(path: str):
 
 
 i = 0
-text = read_file('examples/print.c')
+text = read_file('examples/math.c')
 
 
 def is_digit_16(s: str):
@@ -27,10 +27,6 @@ def is_digit_not_zero(s: str):
 
 def is_not_digit(s: str):
     return len(s) == 1 and s in 'abcdefghijklmnopqrstuvwxyz_ABCDIFJHIJKLMNOPQRSTUVWXYZ'
-
-
-def is_space(s: str):
-    return s
 
 
 def skip_white_symbols_and_comments():
@@ -65,6 +61,16 @@ def find_id_or_static_words():
 
         if s == 'void':
             print('VOID')
+        elif s == 'if':
+            print('IF')
+        elif s == 'else':
+            print('ELSE')
+        elif s == 'short':
+            print('SHORT')
+        elif s == 'int':
+            print('INT')
+        elif s == 'long':
+            print('LONG')
         else:
             print('ID: ' + s)
 
@@ -86,6 +92,33 @@ def find_one_symbols():
     if text[i] == ';':
         print('SEMICOLON')
         up_i()
+    if text[i] == '=':
+        print('ASSIGN')
+        up_i()
+    if text[i] == '+':
+        print('PLUS')
+        up_i()
+    if text[i] == '-':
+        print('MINUS')
+        up_i()
+    if text[i] == '*':
+        print('STAR')
+        up_i()
+    if text[i] == '/':
+        print('SLASH')
+        up_i()
+    if text[i] == '%':
+        print('PERCENT')
+        up_i()
+    if text[i] == ',':
+        print('COMMA')
+        up_i()
+    if text[i] == '<':
+        print('LESS')
+        up_i()
+    if text[i] == '>':
+        print('GREATER')
+        up_i()
 
 
 def find_consts():
@@ -97,11 +130,52 @@ def find_consts():
             s += text[i]
             up_i()
         print('DEC: ' + s)
+    if text[i:i + 2] == '0x':
+        s = text[i:i + 2]
+        up_i()
+        up_i()
+        while is_digit(text[i]):
+            s += text[i]
+            up_i()
+        if s == '0x':
+            print('ERROR')
+        else:
+            print('HEX: ' + s)
+
+
+def find_two_symbols():
+    global i, text
+    if text[i:i + 2] == '>>':
+        print('R_SHIFT')
+        up_i()
+        up_i()
+    if text[i:i + 2] == '<<':
+        print('L_SHIFT')
+        up_i()
+        up_i()
+    if text[i:i + 2] == '==':
+        print('EQ')
+        up_i()
+        up_i()
+    if text[i:i + 2] == '!=':
+        print('NOT_EQ')
+        up_i()
+        up_i()
+    if text[i:i + 2] == '<=':
+        print('LESS_EQ')
+        up_i()
+        up_i()
+    if text[i:i + 2] == '>=':
+        print('GREATER_EQ')
+        up_i()
+        up_i()
 
 
 if __name__ == '__main__':
-    while i < len(text) - 1:
+    while i < len(text) - 2:
         skip_white_symbols_and_comments()
+        find_two_symbols()
         find_one_symbols()
         find_id_or_static_words()
         find_consts()
+    print('EOF')
