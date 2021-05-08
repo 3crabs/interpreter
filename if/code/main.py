@@ -34,6 +34,27 @@ def skip_white_symbols_and_comments():
             up_i()
 
 
+def find_two_symbols():
+    global i, text
+    s = text[i:i + 2]
+    lex = ''
+    if s in two_symbols.keys():
+        lex = two_symbols[s]
+        up_i()
+        up_i()
+    print(lex)
+
+
+def find_one_symbols():
+    global i, text
+    s = text[i]
+    lex = ''
+    if s in one_symbols.keys():
+        lex = one_symbols[s]
+        up_i()
+    print(lex)
+
+
 def find_id_or_static_words():
     global i, text
     if is_not_digit(text[i]):
@@ -47,13 +68,6 @@ def find_id_or_static_words():
             print(static_words[s])
         else:
             print('ID: ' + s)
-
-
-def find_one_symbols():
-    global i, text
-    if text[i] in one_symbols.keys():
-        print(one_symbols[text[i]])
-        up_i()
 
 
 def find_consts():
@@ -82,14 +96,6 @@ def find_consts():
             print('ERROR')
         else:
             print('HEX: ' + s)
-
-
-def find_two_symbols():
-    global i, text
-    if text[i:i + 2] in two_symbols.keys():
-        print(two_symbols[text[i:i + 2]])
-        up_i()
-        up_i()
 
 
 if __name__ == '__main__':
