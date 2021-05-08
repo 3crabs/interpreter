@@ -1,3 +1,4 @@
 /if/code/.idea
 /if/code/venv
-
+/if/code/__pycache__
+/if/code/utils/__pycache__
