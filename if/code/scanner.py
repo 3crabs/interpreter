@@ -4,7 +4,7 @@ from file_reader import read_file
 from is_functions import is_not_digit, is_digit, is_digit_not_zero, is_digit_16_not_zero, is_digit_16
 
 i = 0
-text = read_file('examples/math.c')
+text = ''
 
 
 def up_i():
@@ -92,6 +92,11 @@ def find_consts_hex():
         else:
             return Lex('ERROR'), True
     return None, False
+
+
+def load_file(path: str):
+    global text
+    text = read_file(path)
 
 
 def next_lex():
