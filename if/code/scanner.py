@@ -1,7 +1,7 @@
-from Lex import Lex
-from consts import static_words, one_symbols, two_symbols
-from file_reader import read_file
-from is_functions import is_not_digit, is_digit, is_digit_not_zero, is_digit_16_not_zero, is_digit_16
+from utils.Lex import Lex
+from utils.consts import static_words, one_symbols, two_symbols
+from utils.file_reader import read_file
+from utils.is_functions import is_not_digit, is_digit, is_digit_not_zero, is_digit_16_not_zero, is_digit_16
 
 i = 0
 text = ''
@@ -95,7 +95,8 @@ def find_consts_hex():
 
 
 def load_file(path: str):
-    global text
+    global i, text
+    i = 0
     text = read_file(path)
 
 
