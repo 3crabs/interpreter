@@ -4,12 +4,19 @@ from utils.file_reader import read_file
 from utils.is_functions import is_not_digit, is_digit, is_digit_not_zero, is_digit_16_not_zero, is_digit_16
 
 i = 0
+col = 1
+row = 1
 text = ''
 
 
 def up_i():
-    global i
+    global i, col, row
     if i < len(text) - 1:
+        if text[i] == '\n':
+            row += 1
+            col = 0
+        else:
+            col += 1
         i += 1
 
 
@@ -90,13 +97,15 @@ def find_consts_hex():
                 up_i()
             return Lex('HEX', s), True
         else:
-            return Lex('ERROR'), True
+            return Lex('HEX', '0x0'), True
     return None, False
 
 
 def load_file(path: str):
-    global i, text
+    global i, col, row, text
     i = 0
+    col = 1
+    row = 1
     text = read_file(path)
 
 
