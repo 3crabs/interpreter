@@ -47,6 +47,7 @@ def variable():
         print('Ожидался тип (short, int, long)')
     #  TODO
 
+
 if __name__ == '__main__':
     load_file('examples/print.c')
     program()
