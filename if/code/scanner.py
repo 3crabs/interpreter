@@ -127,3 +127,20 @@ def next_lex():
     if ok:
         return lex
     return Lex('EOF')
+
+
+def read_lex():
+    global i, col, row
+    tmp_i, tmp_col, tmp_row = i, col, row
+    lex = next_lex()
+    i, col, row = tmp_i, tmp_col, tmp_row
+    return lex
+
+
+def read_second_lex():
+    global i, col, row
+    tmp_i, tmp_col, tmp_row = i, col, row
+    next_lex()
+    lex = next_lex()
+    i, col, row = tmp_i, tmp_col, tmp_row
+    return lex
