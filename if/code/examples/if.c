@@ -5,4 +5,8 @@ void main() {
     } else {
         print(2);
     }
+
+    if (a == (a * 2)) {
+        print(1, 2);
+    }
 }
