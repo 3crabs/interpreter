@@ -9,6 +9,16 @@ row = 1
 text = ''
 
 
+def get_row():
+    global row
+    return row
+
+
+def get_col():
+    global col
+    return col
+
+
 def up_i():
     global i, col, row
     if i < len(text) - 1:
@@ -103,6 +113,7 @@ def find_consts_hex():
 
 def load_file(path: str):
     global i, col, row, text
+    print(path)
     i = 0
     col = 1
     row = 1
