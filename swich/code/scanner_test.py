@@ -12,10 +12,9 @@ def test(path: str):
 
 
 if __name__ == '__main__':
-    test('../../swich/code/examples/empty.c')
-    test('../../swich/code/examples/hex.c')
-    test('examples/swich.c')
-    test('../../swich/code/examples/math.c')
-    test('../../swich/code/examples/print.c')
-    test('../../swich/code/examples/types.c')
-    test('../../swich/code/examples/error.c')
+    test('examples/empty.c')
+    test('examples/hex.c')
+    test('examples/math.c')
+    test('examples/print.c')
+    test('examples/switch.c')
+    test('examples/types.c')

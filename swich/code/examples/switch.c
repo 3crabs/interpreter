@@ -5,16 +5,16 @@ void printColor(int x)
   switch (x)
   {
   case 1:
-    print("Gray");
+    print(1);
     break;
   case 2:
-    print("Pink");
+    print(2);
     break;
   case 3:
-    print("Blue");
+    print(3);
     break;
   default:
-    print("Unknown");
+    print(-1);
     break;
   }
 }

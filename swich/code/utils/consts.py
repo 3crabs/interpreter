@@ -1,10 +1,13 @@
 static_words = {
     'void': 'VOID',
-    'if': 'IF',
+    'switch': 'SWITCH',
     'else': 'ELSE',
-    'short': 'SHORT',
+    'int64': 'INT64',
     'int': 'INT',
-    'long': 'LONG'
+    'long': 'LONG',
+    'break': 'BREAK',
+    'default': 'DEFAULT',
+    'case': 'CASE'
 }
 
 one_symbols = {
@@ -21,7 +24,8 @@ one_symbols = {
     '%': 'PERCENT',
     ',': 'COMMA',
     '<': 'LESS',
-    '>': 'GREATER'
+    '>': 'GREATER',
+    ':': 'COLON'
 }
 
 two_symbols = {
