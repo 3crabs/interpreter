@@ -19,16 +19,17 @@ def program():
     current_tree = None
     if DEBUG_LEXER:
         print('program')
-    if read_lex().name == 'EOF':
-        return
     tree = Tree()
     current_tree = tree
-    if read_lex().name == 'VOID':
-        function()
-    elif is_type(read_lex().name):
-        variable()
-    else:
-        err('Ожидался тип (short, int, long) или void')
+    while True:
+        if read_lex().name == 'EOF':
+            return
+        if read_lex().name == 'VOID':
+            function()
+        elif is_type(read_lex().name):
+            variable()
+        else:
+            err('Ожидался тип (short, int, long) или void')
 
 
 def function():
@@ -56,17 +57,28 @@ def composite_operator():
         print('composite_operator')
     if next_lex().name != 'CURLY_LEFT':
         err('Ожидался {')
+    if current_tree.right is not None:
+        new_tree = create_empty()
+        current_tree = current_tree.add_left(new_tree)
     new_tree = create_empty()
     current_tree = current_tree.add_right(new_tree)
-    while read_lex().name != 'EOF' and read_lex().name != 'CURLY_RIGHT':
+    run = True
+    while run is True and read_lex().name != 'EOF' and read_lex().name != 'CURLY_RIGHT':
+        run = False
         if read_lex().name == 'ID':
             call_function()
+            run = True
         if is_type(read_lex().name):
             variable()
+            run = True
         if read_lex().name == 'IF':
             call_if()
+            run = True
+        if run is False:
+            expression()
+            run = True
     t = current_tree
-    while t is not None and t.node is not None and t.node.type_object == 'EMPTY':
+    while t is not None and t.left is not None:
         t = t.up
         break
     current_tree = t.up
@@ -171,7 +183,10 @@ def expression_7():
         if next_lex().name != 'ROUND_RIGHT':
             err('Ожидался )')
     else:
-        next_lex()
+        if read_lex().name == 'CURLY_LEFT':
+            composite_operator()
+        else:
+            next_lex()
 
 
 def variable():
@@ -238,13 +253,13 @@ if __name__ == '__main__':
         tree.get_root().print(0)
     print()
 
-    # load_file('examples/hex.c')
-    # program()
-    # if DEBUG_TREE and tree is not None:
-    #     tree.get_root().print(0)
-    # if DEBUG_LEXER:
-    #     print()
-    # print()
+    load_file('examples/hex.c')
+    program()
+    if DEBUG_TREE and tree is not None:
+        tree.get_root().print(0)
+    if DEBUG_LEXER:
+        print()
+    print()
 
     load_file('examples/if.c')
     program()
@@ -252,21 +267,19 @@ if __name__ == '__main__':
         tree.get_root().print(0)
     print()
 
-    # load_file('examples/math.c')
-    # program()
-    # if DEBUG_TREE and tree is not None:
-    #     tree.get_root().print(0)
-    # print()
+    load_file('examples/math.c')
+    program()
+    if DEBUG_TREE and tree is not None:
+        tree.get_root().print(0)
+    print()
 
-    # load_file('examples/print.c')
-    # program()
-    # if DEBUG_TREE and tree is not None:
-    #     tree.get_root().print(0)
-    # print()
+    load_file('examples/print.c')
+    program()
+    if DEBUG_TREE and tree is not None:
+        tree.get_root().print(0)
+    print()
 
-    # load_file('examples/types.c')
-    # program()
-    # if DEBUG_TREE and tree is not None:
-    #     tree.get_root().print(0)
-
-    current_tree.print(-1)
+    load_file('examples/types.c')
+    program()
+    if DEBUG_TREE and tree is not None:
+        tree.get_root().print(0)

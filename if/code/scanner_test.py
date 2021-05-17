@@ -18,4 +18,3 @@ if __name__ == '__main__':
     test('examples/math.c')
     test('examples/print.c')
     test('examples/types.c')
-    test('examples/error.c')

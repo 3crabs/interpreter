@@ -45,12 +45,12 @@ class Tree:
             print(end='\t')
 
         print(f'this=({self.node})', end='')
-        if self.up is not None:
-            print(f'  up=({self.up.node})', end='')
-        if self.left is not None:
-            print(f'  left=({self.left.node})', end='')
-        if self.right is not None:
-            print(f'  right=({self.right.node})', end='')
+        # if self.up is not None:
+        #     print(f'  up=({self.up.node})', end='')
+        # if self.left is not None:
+        #     print(f'  left=({self.left.node})', end='')
+        # if self.right is not None:
+        #     print(f'  right=({self.right.node})', end='')
         print()
 
         if self.right is not None:
