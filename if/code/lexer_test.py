@@ -3,7 +3,9 @@ from scanner import load_file, read_lex, next_lex, get_col, get_row
 from tree import Tree
 
 DEBUG_LEXER = False
-DEBUG_TREE = True
+DEBUG_TREE = False
+GLOBAL_F = False
+LOCAL_F = True
 
 tree: Tree
 current_tree: Tree
@@ -33,7 +35,7 @@ def program():
 
 
 def function():
-    global tree, current_tree
+    global tree, current_tree, GLOBAL_F
     if DEBUG_LEXER:
         print('function')
     if next_lex().name != 'VOID':
@@ -42,6 +44,8 @@ def function():
     if lex.name != 'ID':
         err(f'Ожидался идентификатор')
     name = lex.value
+    if name == 'main':
+        GLOBAL_F = tree
     new_tree = create_function(name)
     current_tree = current_tree.add_left(new_tree)
     if next_lex().name != 'ROUND_LEFT':
@@ -49,6 +53,8 @@ def function():
     if next_lex().name != 'ROUND_RIGHT':
         err(f'Ожидался )')
     composite_operator()
+    if name == 'main':
+        GLOBAL_F = False
 
 
 def composite_operator():
@@ -81,7 +87,10 @@ def composite_operator():
     while t is not None and t.left is not None:
         t = t.up
         break
-    current_tree = t.up
+    if t.up:
+        current_tree = t.up.up
+    else:
+        current_tree = t.up
     if next_lex().name != 'CURLY_RIGHT':
         err('Ожидался }')
 
@@ -97,7 +106,10 @@ def call_function():
         err_sem(f'Функция {lex.value} не найдена')
     if next_lex().name != 'ROUND_LEFT':
         err('Ожидался (')
-    expression()
+    v = expression()
+    if lex.value == 'print':
+        if GLOBAL_F and LOCAL_F:
+            print(v)
     while read_lex().name == 'COMMA':
         next_lex()
         expression()
@@ -111,66 +123,96 @@ def expression():
     global tree, current_tree
     if DEBUG_LEXER:
         print('expression')
-    expression_1()
+    return expression_1()
 
 
 def expression_1():
     global tree, current_tree
     if DEBUG_LEXER:
         print('expression_1')
-    expression_2()
+    v = expression_2()
     while read_lex().name == 'EQ' or read_lex().name == 'NOT_EQ':
-        next_lex()
-        expression_2()
+        op = next_lex()
+        if op.name == 'EQ':
+            v = v == expression_2()
+        else:
+            v = v != expression_2()
+    return v
 
 
 def expression_2():
     global tree, current_tree
     if DEBUG_LEXER:
         print('expression_2')
-    expression_3()
-    while read_lex().name == 'LESS' or read_lex().name == 'GREATER' or read_lex().name == 'LESS_EQ' or read_lex().name == 'GREATER_EQ':
-        next_lex()
-        expression_3()
+    v = expression_3()
+    while read_lex().name == 'LESS' or read_lex().name == 'GREATER' or \
+            read_lex().name == 'LESS_EQ' or read_lex().name == 'GREATER_EQ':
+        op = next_lex()
+        if op.name == 'LESS':
+            v = v < expression_3()
+        if op.name == 'GREATER':
+            v = v > expression_3()
+        if op.name == 'LESS_EQ':
+            v = v <= expression_3()
+        if op.name == 'GREATER_EQ':
+            v = v >= expression_3()
+    return v
 
 
 def expression_3():
     global tree, current_tree
     if DEBUG_LEXER:
         print('expression_3')
-    expression_4()
+    v = expression_4()
     while read_lex().name == 'R_SHIFT' or read_lex().name == 'L_SHIFT':
-        next_lex()
-        expression_4()
+        op = next_lex()
+        if op.name == 'R_SHIFT':
+            v >>= expression_4()
+        else:
+            v <<= expression_4()
+    return v
 
 
 def expression_4():
     global tree, current_tree
     if DEBUG_LEXER:
         print('expression_4')
-    expression_5()
+    v = expression_5()
     while read_lex().name == 'PLUS' or read_lex().name == 'MINUS':
-        next_lex()
-        expression_5()
+        op = next_lex()
+        if op.name == 'PLUS':
+            v += expression_5()
+        else:
+            v -= expression_5()
+    return v
 
 
 def expression_5():
     global tree, current_tree
     if DEBUG_LEXER:
         print('expression_5')
-    expression_6()
+    v = expression_6()
     while read_lex().name == 'STAR' or read_lex().name == 'SLASH' or read_lex().name == 'PERCENT':
-        next_lex()
-        expression_6()
+        op = next_lex()
+        if op.name == 'STAR':
+            v *= expression_6()
+        elif op.name == 'SLASH':
+            v /= expression_6()
+        else:
+            v %= expression_6()
+    return v
 
 
 def expression_6():
     global tree, current_tree
     if DEBUG_LEXER:
         print('expression_6')
+    v = 1
     while read_lex().name == 'MINUS' or read_lex().name == 'PLUS':
-        next_lex()
-    expression_7()
+        op = next_lex()
+        if op.name == 'MINUS':
+            v = -v
+    return v * expression_7()
 
 
 def expression_7():
@@ -186,7 +228,12 @@ def expression_7():
         if read_lex().name == 'CURLY_LEFT':
             composite_operator()
         else:
-            next_lex()
+            if read_lex().name == 'DEC':
+                return next_lex().value
+            else:
+                var = current_tree.find_var(read_lex().value)
+                next_lex()
+                return int(var.node.value)
 
 
 def variable():
@@ -210,7 +257,8 @@ def variable():
         current_tree = current_tree.add_left(var)
         if next_lex().name != 'ASSIGN':
             err('Ожидался =')
-        expression()
+        v = expression()
+        var.value = v
         f = False
         if read_lex().name == 'COMMA':
             f = True
@@ -220,20 +268,24 @@ def variable():
 
 
 def call_if():
-    global tree, current_tree
+    global tree, current_tree, LOCAL_F
     if DEBUG_LEXER:
         print('call_if')
     if next_lex().name != 'IF':
         err('Ожидался if')
     if next_lex().name != 'ROUND_LEFT':
         err('Ожидался (')
-    expression()
+    v = expression()
+    save_f = LOCAL_F
+    LOCAL_F = v
     if next_lex().name != 'ROUND_RIGHT':
         err('Ожидался )')
     composite_operator()
     if read_lex().name == 'ELSE':
+        LOCAL_F = not LOCAL_F
         next_lex()
         composite_operator()
+    LOCAL_F = save_f
 
 
 def err(text: str):
@@ -247,25 +299,25 @@ def err_sem(text: str):
 
 
 if __name__ == '__main__':
-    load_file('examples/empty.c')
-    program()
-    if DEBUG_TREE and tree is not None:
-        tree.get_root().print(0)
-    print()
+    # load_file('examples/empty.c')
+    # program()
+    # if DEBUG_TREE and tree is not None:
+    #     tree.get_root().print(0)
+    # print()
+    #
+    # load_file('examples/hex.c')
+    # program()
+    # if DEBUG_TREE and tree is not None:
+    #     tree.get_root().print(0)
+    # if DEBUG_LEXER:
+    #     print()
+    # print()
 
-    load_file('examples/hex.c')
-    program()
-    if DEBUG_TREE and tree is not None:
-        tree.get_root().print(0)
-    if DEBUG_LEXER:
-        print()
-    print()
-
-    load_file('examples/if.c')
-    program()
-    if DEBUG_TREE and tree is not None:
-        tree.get_root().print(0)
-    print()
+    # load_file('examples/if.c')
+    # program()
+    # if DEBUG_TREE and tree is not None:
+    #     tree.get_root().print(0)
+    # print()
 
     load_file('examples/math.c')
     program()
@@ -273,13 +325,19 @@ if __name__ == '__main__':
         tree.get_root().print(0)
     print()
 
-    load_file('examples/print.c')
-    program()
-    if DEBUG_TREE and tree is not None:
-        tree.get_root().print(0)
-    print()
+    # load_file('examples/print.c')
+    # program()
+    # if DEBUG_TREE and tree is not None:
+    #     tree.get_root().print(0)
+    # print()
 
-    load_file('examples/types.c')
-    program()
-    if DEBUG_TREE and tree is not None:
-        tree.get_root().print(0)
+    # load_file('examples/types.c')
+    # program()
+    # if DEBUG_TREE and tree is not None:
+    #     tree.get_root().print(0)
+
+    # load_file('examples/test.c')
+    # program()
+    # if DEBUG_TREE and tree is not None:
+    #     tree.get_root().print(0)
+    # print(current_tree.node)

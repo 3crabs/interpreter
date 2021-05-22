@@ -8,11 +8,9 @@ class Node:
         # VAR
         # FUNCTION
         # EMPTY
-        # CONST
         self.type_object = type_object
 
         # тип данных (тип переменной, тип константы)
-        # VOID
         # SHORT
         # INTEGER
         # LONG

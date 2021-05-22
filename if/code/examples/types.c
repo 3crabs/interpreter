@@ -1,6 +1,6 @@
 void main() {
-    short a = 1;
-    int b = 2;
-    long c = 3, d = 4;
-    print(a + b + c + d);
+    print(1);
+    print(2);
+    print(1 == 1);
+    print(1 == 2);
 }
