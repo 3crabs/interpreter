@@ -2,6 +2,7 @@ int funRes;
 
 void fun(int n) {
     if (n <= 1) {
+        return;
     } else {
         funRes = funRes * n;
         fun(n - 1);
