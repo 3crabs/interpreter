@@ -6,6 +6,7 @@ DEBUG_LEXER = False
 DEBUG_TREE = False
 GLOBAL_F = False
 LOCAL_F = True
+RET_F = False
 
 tree: Tree
 current_tree: Tree
@@ -35,7 +36,7 @@ def program():
 
 
 def function():
-    global tree, current_tree, GLOBAL_F
+    global tree, current_tree, GLOBAL_F, LOCAL_F
     if DEBUG_LEXER:
         print('function')
     if next_lex().name != 'VOID':
@@ -46,6 +47,7 @@ def function():
     name = lex.value
     if name == 'main':
         GLOBAL_F = tree
+        LOCAL_F = True
     fun_tree = create_function(name)
     current_tree = current_tree.add_left(fun_tree)
     new_tree = create_empty()
@@ -88,7 +90,7 @@ def assign_var():
 
 
 def composite_operator():
-    global tree, current_tree
+    global tree, current_tree, LOCAL_F, RET_F
     if DEBUG_LEXER:
         print('composite_operator')
     if next_lex().name != 'CURLY_LEFT':
@@ -101,6 +103,13 @@ def composite_operator():
     run = True
     while run is True and read_lex().name != 'EOF' and read_lex().name != 'CURLY_RIGHT':
         run = False
+        if read_lex().name == 'RETURN':
+            next_lex()
+            next_lex()
+            if GLOBAL_F and LOCAL_F:
+                RET_F = True
+                LOCAL_F = False
+            run = True
         if read_lex().name == 'ID':
             a, b, c = g()
             next_lex()
@@ -130,7 +139,7 @@ def composite_operator():
 
 
 def call_function():
-    global tree, current_tree
+    global tree, current_tree, LOCAL_F, RET_F
     if DEBUG_LEXER:
         print('call_function')
     lex = next_lex()
@@ -141,19 +150,24 @@ def call_function():
         err_sem(f'Функция {lex.value} не найдена')
     if next_lex().name != 'ROUND_LEFT':
         err('Ожидался (')
-    v = expression()
+    if read_lex().name != 'ROUND_RIGHT':
+        v = expression()
     if lex.value == 'print':
         if GLOBAL_F and LOCAL_F:
             print(v)
     else:
         if GLOBAL_F and LOCAL_F:
+            RET_F = False
             a, b, c = g()
             x, y, z = f.node.g()
             s(x, y, z)
-            vname = f.node.params[0]["var_name"]
-            var = current_tree.find_var(vname)
-            var.node.value = str(v)
+            save = LOCAL_F
+            if len(f.node.params) > 0:
+                vname = f.node.params[0]["var_name"]
+                var = current_tree.find_var(vname)
+                var.node.value = str(v)
             composite_operator()
+            LOCAL_F = save
             s(a, b, c)
     while read_lex().name == 'COMMA':
         next_lex()
@@ -333,7 +347,8 @@ def call_if():
         err('Ожидался )')
     composite_operator()
     if read_lex().name == 'ELSE':
-        LOCAL_F = not LOCAL_F
+        if not RET_F:
+            LOCAL_F = not LOCAL_F
         next_lex()
         composite_operator()
     LOCAL_F = save_f
@@ -376,11 +391,11 @@ if __name__ == '__main__':
     #     tree.get_root().print(0)
     # print()
 
-    # load_file('examples/recur.c')
-    # program()
-    # if DEBUG_TREE and tree is not None:
-    #     tree.get_root().print(0)
-    # print()
+    load_file('examples/recur.c')
+    program()
+    if DEBUG_TREE and tree is not None:
+        tree.get_root().print(0)
+    print()
 
     # load_file('examples/descr.c')
     # program()
@@ -388,11 +403,17 @@ if __name__ == '__main__':
     #     tree.get_root().print(0)
     # print()
 
-    load_file('examples/print.c')
-    program()
-    if DEBUG_TREE and tree is not None:
-        tree.get_root().print(0)
-    print()
+    # load_file('examples/print.c')
+    # program()
+    # if DEBUG_TREE and tree is not None:
+    #     tree.get_root().print(0)
+    # print()
+
+    # load_file('examples/ret.c')
+    # program()
+    # if DEBUG_TREE and tree is not None:
+    #     tree.get_root().print(0)
+    # print()
 
     # load_file('examples/types.c')
     # program()
