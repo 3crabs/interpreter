@@ -148,6 +148,16 @@ def read_lex():
     return lex
 
 
+def g():
+    global i, col, row
+    return i, col, row
+
+
+def s(ni, ncol, nrow):
+    global i, col, row
+    i, col, row = ni, ncol, nrow
+
+
 def read_second_lex():
     global i, col, row
     tmp_i, tmp_col, tmp_row = i, col, row

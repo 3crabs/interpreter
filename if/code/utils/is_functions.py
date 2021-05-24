@@ -11,7 +11,7 @@ def is_digit(s: str):
 
 
 def is_digit_not_zero(s: str):
-    return len(s) == 1 and s in '123456789'
+    return len(s) == 1 and s in '0123456789'
 
 
 def is_not_digit(s: str):

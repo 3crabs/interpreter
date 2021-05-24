@@ -4,6 +4,7 @@ static_words = {
     'else': 'ELSE',
     'short': 'SHORT',
     'int': 'INT',
+    'return': 'RETURN',
     'long': 'LONG'
 }
 
