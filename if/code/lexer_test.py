@@ -242,7 +242,10 @@ def expression_5():
         if op.name == 'STAR':
             v *= expression_6()
         elif op.name == 'SLASH':
-            v /= expression_6()
+            a = expression_6()
+            if a == 0:
+                err_sem("делить на 0 нельзя")
+            v /= a
         else:
             v %= expression_6()
     return v
@@ -379,17 +382,17 @@ if __name__ == '__main__':
     #     tree.get_root().print(0)
     # print()
 
-    load_file('examples/descr.c')
-    program()
-    if DEBUG_TREE and tree is not None:
-        tree.get_root().print(0)
-    print()
-
-    # load_file('examples/print.c')
+    # load_file('examples/descr.c')
     # program()
     # if DEBUG_TREE and tree is not None:
     #     tree.get_root().print(0)
     # print()
+
+    load_file('examples/print.c')
+    program()
+    if DEBUG_TREE and tree is not None:
+        tree.get_root().print(0)
+    print()
 
     # load_file('examples/types.c')
     # program()
