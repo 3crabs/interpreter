@@ -12,9 +12,9 @@ def test(path: str):
 
 
 if __name__ == '__main__':
-    test('examples/empty.c')
-    test('examples/hex.c')
-    test('examples/math.c')
-    test('examples/print.c')
+    # test('examples/empty.c')
+    # test('examples/hex.c')
+    # test('examples/math.c')
+    # test('examples/print.c')
     test('examples/switch.c')
-    test('examples/types.c')
+    # test('examples/types.c')

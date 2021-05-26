@@ -8,11 +8,9 @@ class Node:
         # VAR
         # FUNCTION
         # EMPTY
-        # CONST
         self.type_object = type_object
 
         # тип данных (тип переменной, тип константы)
-        # VOID
         # SHORT
         # INTEGER
         # LONG
@@ -25,8 +23,20 @@ class Node:
         # параметры функции
         self.params = []
 
+        self.a = 0
+        self.b = 0
+        self.c = 0
+
     def get_int(self):
         return int(self.value)
+
+    def s(self, a, b, c):
+        self.a = a
+        self.b = b
+        self.c = c
+
+    def g(self):
+        return self.a, self.b, self.c
 
     def __str__(self):
         s = self.type_object + ' '
