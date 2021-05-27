@@ -45,7 +45,7 @@ def function():
         err(f'Ожидался идентификатор')
     name = lex.value
     if name == 'main':
-        GLOBAL_F = tree
+        GLOBAL_F = True
     fun_tree = create_function(name)
     current_tree = current_tree.add_left(fun_tree)
     new_tree = create_empty()
@@ -55,8 +55,9 @@ def function():
     while is_type(read_lex().name):
         t = next_lex()
         n = next_lex()
-        fun_tree.params.append({"var_type": t.name, "var_name": n.value})
-        new_tree = create_var(n.value, t.value)
+        js = {"var_type": t.name, "var_name": n.value, "value": 0}
+        fun_tree.params.append(js)
+        new_tree = create_var(n.value, t.name)
         new_tree.value = '0'
         current_tree = current_tree.add_left(new_tree)
         if read_lex().name == 'COMMA':
@@ -66,11 +67,7 @@ def function():
     x, y, z = g()
     fun_tree.s(x, y, z)
     composite_operator()
-    t = current_tree
-    while t.node.type_object != 'EMPTY':
-        t = t.up
-        break
-    current_tree = t.up
+    current_tree = current_tree.find_function(name)
     if name == 'main':
         GLOBAL_F = False
 
@@ -83,12 +80,13 @@ def check_types(vtype, v):
             err_sem('Число слишком маленькое для типа short')
     if vtype == 'INT':
         if v > 2 ** 31 - 1:
-            err_sem('Число слишком большое для типа int')
+            err_sem(f'Число слишком большое для типа int {v}')
         if v < -2 ** 31:
             err_sem('Число слишком маленькое для типа int')
 
 
 def assign_var():
+    global GLOBAL_F
     if DEBUG_LEXER:
         print('assign_var')
     vname = next_lex().value
@@ -104,11 +102,12 @@ def assign_var():
 
 
 def composite_operator():
-    global tree, current_tree, RET_F
+    global tree, current_tree, GLOBAL_F, RET_F
     if DEBUG_LEXER:
         print('composite_operator')
     if next_lex().name != 'CURLY_LEFT':
         err('Ожидался {')
+    save_f = GLOBAL_F
     if current_tree.right is not None:
         new_tree = create_empty()
         current_tree = current_tree.add_left(new_tree)
@@ -118,10 +117,11 @@ def composite_operator():
     while run is True and read_lex().name != 'EOF' and read_lex().name != 'CURLY_RIGHT':
         run = False
         if read_lex().name == 'RETURN':
-            next_lex()
-            next_lex()
             if GLOBAL_F:
                 RET_F = True
+            GLOBAL_F = False
+            next_lex()
+            next_lex()
             run = True
         if read_lex().name == 'ID':
             a, b, c = g()
@@ -149,10 +149,44 @@ def composite_operator():
     current_tree = t.up
     if next_lex().name != 'CURLY_RIGHT':
         err('Ожидался }')
+    GLOBAL_F = save_f
+
+
+def run_f(f, new_l):
+    global current_tree, RET_F, GLOBAL_F
+    # print('s_ret_f', RET_F, GLOBAL_F)
+    save_ret_f = RET_F
+    old_a, old_b, old_c = g()
+    a, b, c = f.node.g()
+    s(a, b, c)
+    save_tree = current_tree
+    current_tree = f.right
+    while current_tree.left:
+        current_tree = current_tree.left
+
+    old_l = []
+    for i in range(len(f.node.params)):
+        name = f.node.params[i]["var_name"]
+        old_l.append(current_tree.find_var(name).node.value)
+
+    for i in range(len(f.node.params)):
+        name = f.node.params[i]["var_name"]
+        current_tree.find_var(name).node.value = str(new_l[i])
+
+    composite_operator()
+
+    for i in range(len(f.node.params)):
+        name = f.node.params[i]["var_name"]
+        current_tree.find_var(name).node.value = str(old_l[i])
+
+    s(old_a, old_b, old_c)
+    RET_F = save_ret_f
+    current_tree = save_tree
+    # print('e_ret_f', RET_F, GLOBAL_F)
 
 
 def call_function():
-    global tree, current_tree, RET_F
+    global tree, current_tree, GLOBAL_F
     if DEBUG_LEXER:
         print('call_function')
     lex = next_lex()
@@ -163,24 +197,18 @@ def call_function():
         err_sem(f'Функция {lex.value} не найдена')
     if next_lex().name != 'ROUND_LEFT':
         err('Ожидался (')
+    l = []
     if read_lex().name != 'ROUND_RIGHT':
-        expression()
-    else:
-        if GLOBAL_F:
-            RET_F = False
-            a, b, c = g()
-            x, y, z = f.node.g()
-            s(x, y, z)
-            if len(f.node.params) > 0:
-                vname = f.node.params[0]["var_name"]
-                current_tree.find_var(vname)
-            composite_operator()
-            s(a, b, c)
-    while read_lex().name == 'COMMA':
-        next_lex()
-        expression()
+        v = expression()
+        l.append(v)
+        while read_lex().name == 'COMMA':
+            next_lex()
+            v = expression()
+            l.append(v)
     if next_lex().name != 'ROUND_RIGHT':
         err('Ожидался )')
+    if GLOBAL_F:
+        run_f(f, l)
     if next_lex().name != 'SEMICOLON':
         err('Ожидался ;')
 
@@ -193,21 +221,25 @@ def expression():
 
 
 def expression_1():
-    global tree, current_tree
+    global tree, current_tree, GLOBAL_F
     if DEBUG_LEXER:
         print('expression_1')
     v = expression_2()
     while read_lex().name == 'EQ' or read_lex().name == 'NOT_EQ':
         op = next_lex()
         if op.name == 'EQ':
-            v = v == expression_2()
+            v2 = expression_2()
+            if GLOBAL_F:
+                v = v == v2
         else:
-            v = v != expression_2()
+            v2 = expression_2()
+            if GLOBAL_F:
+                v = v != v2
     return v
 
 
 def expression_2():
-    global tree, current_tree
+    global tree, current_tree, GLOBAL_F
     if DEBUG_LEXER:
         print('expression_2')
     v = expression_3()
@@ -215,60 +247,82 @@ def expression_2():
             read_lex().name == 'LESS_EQ' or read_lex().name == 'GREATER_EQ':
         op = next_lex()
         if op.name == 'LESS':
-            v = v < expression_3()
+            v3 = expression_3()
+            if GLOBAL_F:
+                v = v < v3
         if op.name == 'GREATER':
-            v = v > expression_3()
+            v3 = expression_3()
+            if GLOBAL_F:
+                v = v > v3
         if op.name == 'LESS_EQ':
-            v = v <= expression_3()
+            v3 = expression_3()
+            if GLOBAL_F:
+                v = v <= v3
         if op.name == 'GREATER_EQ':
-            v = v >= expression_3()
+            v3 = expression_3()
+            if GLOBAL_F:
+                v = v >= v3
     return v
 
 
 def expression_3():
-    global tree, current_tree
+    global tree, current_tree, GLOBAL_F
     if DEBUG_LEXER:
         print('expression_3')
     v = expression_4()
     while read_lex().name == 'R_SHIFT' or read_lex().name == 'L_SHIFT':
         op = next_lex()
         if op.name == 'R_SHIFT':
-            v >>= expression_4()
+            v4 = expression_4()
+            if GLOBAL_F:
+                v >>= v4
         else:
-            v <<= expression_4()
+            v4 = expression_4()
+            if GLOBAL_F:
+                v <<= v4
     return v
 
 
 def expression_4():
-    global tree, current_tree
+    global tree, current_tree, GLOBAL_F
     if DEBUG_LEXER:
         print('expression_4')
     v = expression_5()
     while read_lex().name == 'PLUS' or read_lex().name == 'MINUS':
         op = next_lex()
         if op.name == 'PLUS':
-            v += expression_5()
+            v5 = expression_5()
+            if GLOBAL_F:
+                v += v5
         else:
-            v -= expression_5()
+            v5 = expression_5()
+            if GLOBAL_F:
+                v -= v5
     return v
 
 
 def expression_5():
-    global tree, current_tree
+    global tree, current_tree, GLOBAL_F
     if DEBUG_LEXER:
         print('expression_5')
     v = expression_6()
     while read_lex().name == 'STAR' or read_lex().name == 'SLASH' or read_lex().name == 'PERCENT':
         op = next_lex()
         if op.name == 'STAR':
-            v *= expression_6()
+            v6 = expression_6()
+            if GLOBAL_F:
+                v *= v6
         elif op.name == 'SLASH':
-            a = expression_6()
-            if a == 0:
-                err_sem("делить на 0 нельзя")
-            v /= a
+            v6 = expression_6()
+            a = v6
+            if GLOBAL_F:
+                if a == 0:
+                    err_sem("делить на 0 нельзя")
+                v /= a
         else:
-            v %= expression_6()
+            v6 = expression_6()
+            if GLOBAL_F:
+                v %= v6
     return v
 
 
@@ -290,9 +344,10 @@ def expression_7():
         print('expression_7')
     if read_lex().name == 'ROUND_LEFT':
         next_lex()
-        expression()
+        v = expression()
         if next_lex().name != 'ROUND_RIGHT':
             err('Ожидался )')
+        return v
     else:
         if read_lex().name == 'CURLY_LEFT':
             composite_operator()
@@ -330,11 +385,12 @@ def variable():
         if read_lex().name == 'ASSIGN':
             next_lex()
             v = expression()
-            var.value = v
-            vtype = var.type_data
-            vname = var.name
-            check_types(vtype, v)
-            print(vtype, vname, "=", str(v))
+            if GLOBAL_F:
+                var.value = v
+                vtype = var.type_data
+                vname = var.name
+                check_types(vtype, v)
+                print(vtype, vname, "=", str(v))
         f = False
         if read_lex().name == 'COMMA':
             f = True
@@ -344,20 +400,27 @@ def variable():
 
 
 def call_if():
-    global tree, current_tree
+    global tree, current_tree, GLOBAL_F
     if DEBUG_LEXER:
         print('call_if')
     if next_lex().name != 'IF':
         err('Ожидался if')
     if next_lex().name != 'ROUND_LEFT':
         err('Ожидался (')
-    expression()
+    v = expression()
+    save_f = GLOBAL_F
+    GLOBAL_F = v and save_f and not RET_F
+    # print('if', GLOBAL_F)
     if next_lex().name != 'ROUND_RIGHT':
         err('Ожидался )')
     composite_operator()
     if read_lex().name == 'ELSE':
+        GLOBAL_F = not v and save_f and not RET_F
+        # print('else', GLOBAL_F)
         next_lex()
         composite_operator()
+    GLOBAL_F = save_f and not RET_F
+    # print('end', GLOBAL_F)
 
 
 def err(text: str):
@@ -371,7 +434,7 @@ def err_sem(text: str):
 
 
 if __name__ == '__main__':
-    load_file('examples/types.c')
+    load_file('examples/empty.c')
     program()
     if DEBUG_TREE and tree is not None:
         tree.get_root().print(0)
