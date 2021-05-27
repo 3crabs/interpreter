@@ -13,8 +13,6 @@ class Node:
         # тип данных (тип переменной, тип константы)
         # SHORT
         # INTEGER
-        # LONG
-        # UNKNOWN
         self.type_data = type_data
 
         # значение (значение переменной, значение константы)

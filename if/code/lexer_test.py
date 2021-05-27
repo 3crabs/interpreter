@@ -5,7 +5,6 @@ from tree import Tree
 DEBUG_LEXER = False
 DEBUG_TREE = False
 GLOBAL_F = False
-LOCAL_F = True
 RET_F = False
 
 tree: Tree
@@ -13,7 +12,7 @@ current_tree: Tree
 
 
 def is_type(name: str):
-    return name in ['SHORT', 'INT', 'LONG']
+    return name in ['SHORT', 'INT']
 
 
 def program():
@@ -36,7 +35,7 @@ def program():
 
 
 def function():
-    global tree, current_tree, GLOBAL_F, LOCAL_F
+    global tree, current_tree, GLOBAL_F
     if DEBUG_LEXER:
         print('function')
     if next_lex().name != 'VOID':
@@ -47,7 +46,6 @@ def function():
     name = lex.value
     if name == 'main':
         GLOBAL_F = tree
-        LOCAL_F = True
     fun_tree = create_function(name)
     current_tree = current_tree.add_left(fun_tree)
     new_tree = create_empty()
@@ -77,20 +75,36 @@ def function():
         GLOBAL_F = False
 
 
+def check_types(vtype, v):
+    if vtype == 'SHORT':
+        if v > 2 ** 15 - 1:
+            err_sem('Число слишком большое для типа short')
+        if v < -2 ** 15:
+            err_sem('Число слишком маленькое для типа short')
+    if vtype == 'INT':
+        if v > 2 ** 31 - 1:
+            err_sem('Число слишком большое для типа int')
+        if v < -2 ** 31:
+            err_sem('Число слишком маленькое для типа int')
+
+
 def assign_var():
     if DEBUG_LEXER:
         print('assign_var')
-    name = next_lex().value
+    vname = next_lex().value
     next_lex()
     v = expression()
-    var = current_tree.find_var(name)
-    if GLOBAL_F and LOCAL_F:
+    var = current_tree.find_var(vname)
+    if GLOBAL_F:
         var.node.value = str(v)
+        vtype = var.node.type_data
+        check_types(vtype, v)
+        print(vtype, vname, "=", str(v))
     next_lex()
 
 
 def composite_operator():
-    global tree, current_tree, LOCAL_F, RET_F
+    global tree, current_tree, RET_F
     if DEBUG_LEXER:
         print('composite_operator')
     if next_lex().name != 'CURLY_LEFT':
@@ -106,9 +120,8 @@ def composite_operator():
         if read_lex().name == 'RETURN':
             next_lex()
             next_lex()
-            if GLOBAL_F and LOCAL_F:
+            if GLOBAL_F:
                 RET_F = True
-                LOCAL_F = False
             run = True
         if read_lex().name == 'ID':
             a, b, c = g()
@@ -139,7 +152,7 @@ def composite_operator():
 
 
 def call_function():
-    global tree, current_tree, LOCAL_F, RET_F
+    global tree, current_tree, RET_F
     if DEBUG_LEXER:
         print('call_function')
     lex = next_lex()
@@ -151,23 +164,17 @@ def call_function():
     if next_lex().name != 'ROUND_LEFT':
         err('Ожидался (')
     if read_lex().name != 'ROUND_RIGHT':
-        v = expression()
-    if lex.value == 'print':
-        if GLOBAL_F and LOCAL_F:
-            print(v)
+        expression()
     else:
-        if GLOBAL_F and LOCAL_F:
+        if GLOBAL_F:
             RET_F = False
             a, b, c = g()
             x, y, z = f.node.g()
             s(x, y, z)
-            save = LOCAL_F
             if len(f.node.params) > 0:
                 vname = f.node.params[0]["var_name"]
-                var = current_tree.find_var(vname)
-                var.node.value = str(v)
+                current_tree.find_var(vname)
             composite_operator()
-            LOCAL_F = save
             s(a, b, c)
     while read_lex().name == 'COMMA':
         next_lex()
@@ -308,7 +315,7 @@ def variable():
     lex = next_lex()
     if not is_type(lex.name):
         err('Ожидался тип (short, int, long)')
-    type_var = lex.value
+    type_var = lex.name
     f = True
     while f:
         lex = next_lex()
@@ -324,6 +331,10 @@ def variable():
             next_lex()
             v = expression()
             var.value = v
+            vtype = var.type_data
+            vname = var.name
+            check_types(vtype, v)
+            print(vtype, vname, "=", str(v))
         f = False
         if read_lex().name == 'COMMA':
             f = True
@@ -333,25 +344,20 @@ def variable():
 
 
 def call_if():
-    global tree, current_tree, LOCAL_F
+    global tree, current_tree
     if DEBUG_LEXER:
         print('call_if')
     if next_lex().name != 'IF':
         err('Ожидался if')
     if next_lex().name != 'ROUND_LEFT':
         err('Ожидался (')
-    v = expression()
-    save_f = LOCAL_F
-    LOCAL_F = v
+    expression()
     if next_lex().name != 'ROUND_RIGHT':
         err('Ожидался )')
     composite_operator()
     if read_lex().name == 'ELSE':
-        if not RET_F:
-            LOCAL_F = not LOCAL_F
         next_lex()
         composite_operator()
-    LOCAL_F = save_f
 
 
 def err(text: str):
@@ -365,63 +371,8 @@ def err_sem(text: str):
 
 
 if __name__ == '__main__':
-    # load_file('examples/empty.c')
-    # program()
-    # if DEBUG_TREE and tree is not None:
-    #     tree.get_root().print(0)
-    # print()
-    #
-    # load_file('examples/hex.c')
-    # program()
-    # if DEBUG_TREE and tree is not None:
-    #     tree.get_root().print(0)
-    # if DEBUG_LEXER:
-    #     print()
-    # print()
-
-    # load_file('examples/if.c')
-    # program()
-    # if DEBUG_TREE and tree is not None:
-    #     tree.get_root().print(0)
-    # print()
-
-    # load_file('examples/math.c')
-    # program()
-    # if DEBUG_TREE and tree is not None:
-    #     tree.get_root().print(0)
-    # print()
-
-    load_file('examples/recur.c')
+    load_file('examples/types.c')
     program()
     if DEBUG_TREE and tree is not None:
         tree.get_root().print(0)
     print()
-
-    # load_file('examples/descr.c')
-    # program()
-    # if DEBUG_TREE and tree is not None:
-    #     tree.get_root().print(0)
-    # print()
-
-    # load_file('examples/print.c')
-    # program()
-    # if DEBUG_TREE and tree is not None:
-    #     tree.get_root().print(0)
-    # print()
-
-    # load_file('examples/ret.c')
-    # program()
-    # if DEBUG_TREE and tree is not None:
-    #     tree.get_root().print(0)
-    # print()
-
-    # load_file('examples/types.c')
-    # program()
-    # if DEBUG_TREE and tree is not None:
-    #     tree.get_root().print(0)
-
-    # load_file('examples/test.c')
-    # program()
-    # if DEBUG_TREE and tree is not None:
-    #     tree.get_root().print(0)
-    # print(current_tree.node)
