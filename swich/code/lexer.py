@@ -108,7 +108,7 @@ def variable():
         error('ожидался ;')
 
 
-def composite_operator():
+def composite_operator(switch_v=None):
     global main_tree, current_tree_node, GLOBAL_FLAG, RETURN_FLAG
     if LOG_LEXER:
         print('composite_operator')
@@ -144,19 +144,25 @@ def composite_operator():
             next_lexem()
             if next_lexem().name != 'ROUND_LEFT':
                 error('ожидался (')
-            exp()
+            v = exp()
             if next_lexem().name != 'ROUND_RIGHT':
                 error('ожидался )')
-            composite_operator()
+            save_f = GLOBAL_FLAG
+            GLOBAL_FLAG = False
+            composite_operator(v)
+            GLOBAL_FLAG = save_f
             run = True
         if read_lexem().name == 'CASE':
             next_lexem()
-            exp()
+            v = exp()
+            if switch_v == v:
+                GLOBAL_FLAG = True
             if next_lexem().name != 'COLON':
                 error('ожидался :')
             run = True
         if read_lexem().name == 'DEFAULT':
             next_lexem()
+            GLOBAL_FLAG = not GLOBAL_FLAG
             if next_lexem().name != 'COLON':
                 error('ожидался :')
             run = True
