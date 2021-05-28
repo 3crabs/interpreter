@@ -1,4 +1,14 @@
 void main() {
-    int a = 0;
-    _int64 b = 0;
+    switch (1) {
+    case 1:
+        int a = 1;
+    case 2:
+        int b = 2;
+    case 3:
+        int c = 3;
+    case 4:
+        int d = 4;
+    default:
+        int e = 5;
+    }
 }

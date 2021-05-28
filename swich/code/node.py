@@ -23,19 +23,19 @@ class Node:
     def get_int(self):
         return int(self.value)
 
-    def s(self, a, b, c):
+    def set_position(self, a, b, c):
         self.a = a
         self.b = b
         self.c = c
 
-    def g(self):
+    def get_position(self):
         return self.a, self.b, self.c
 
     def __str__(self):
         s = self.type_object
 
         if self.type_object == 'VAR':
-            return s + ' ' + self.name + ' value=' + self.value
+            return s + ' ' + self.name + ' value=' + str(self.value)
 
         if self.type_object == 'FUNCTION':
             return s + ' ' + self.name + ' params=' + str(self.params)

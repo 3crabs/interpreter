@@ -118,7 +118,7 @@ def load_file(path: str):
     text = read_file(path)
 
 
-def next_lex():
+def next_lexem():
     skip_white_symbols_and_comments()
     lex, ok = find_two_symbols()
     if ok:
@@ -141,36 +141,36 @@ def next_lex():
 def read_lexem():
     global i, col, row
     tmp_i, tmp_col, tmp_row = i, col, row
-    lex = next_lex()
+    lex = next_lexem()
     i, col, row = tmp_i, tmp_col, tmp_row
     return lex
 
 
-def g():
+def get_state():
     global i, col, row
     return i, col, row
 
 
-def s(ni, ncol, nrow):
+def set_state(new_i, new_col, new_row):
     global i, col, row
-    i, col, row = ni, ncol, nrow
+    i, col, row = new_i, new_col, new_row
 
 
 def read_second_lex():
     global i, col, row
     tmp_i, tmp_col, tmp_row = i, col, row
-    next_lex()
-    lex = next_lex()
+    next_lexem()
+    lex = next_lexem()
     i, col, row = tmp_i, tmp_col, tmp_row
     return lex
 
 
 def test(path: str):
     load_file(path)
-    lex = next_lex()
+    lex = next_lexem()
     while lex.name != 'EOF' and lex.name != 'ERROR':
         print(lex)
-        lex = next_lex()
+        lex = next_lexem()
     print(lex)
     print()
 
