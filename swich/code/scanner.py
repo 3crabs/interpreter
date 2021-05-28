@@ -138,7 +138,7 @@ def next_lex():
     return Lexem('EOF')
 
 
-def read_lex():
+def read_lexem():
     global i, col, row
     tmp_i, tmp_col, tmp_row = i, col, row
     lex = next_lex()
