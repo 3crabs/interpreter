@@ -2,7 +2,6 @@ void main() {
     switch (1) {
     case 1:
         int a = 1;
-        break;
     case 2:
         int b = 2;
         break;
