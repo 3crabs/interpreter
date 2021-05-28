@@ -1,4 +1,4 @@
-class Lex:
+class Lexem:
 
     def __init__(self, name: str = '', value: str = ''):
         self.name = name

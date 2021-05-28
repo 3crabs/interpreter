@@ -1,7 +1,5 @@
-from utils.Lex import Lex
-from utils.consts import static_words, one_symbols, two_symbols
-from utils.file_reader import read_file
-from utils.is_functions import is_not_digit, is_digit, is_digit_not_zero, is_digit_16_not_zero, is_digit_16
+from utils.Lexem import Lexem
+from utils.utils import static_words, one_symbols, two_symbols, is_not_digit, is_digit, is_digit_16, read_file
 
 i = 0
 col = 1
@@ -52,7 +50,7 @@ def find_two_symbols():
         name = two_symbols[s]
         up_i()
         up_i()
-        return Lex(name), True
+        return Lexem(name), True
     return None, False
 
 
@@ -62,7 +60,7 @@ def find_one_symbols():
     if s in one_symbols.keys():
         name = one_symbols[s]
         up_i()
-        return Lex(name), True
+        return Lexem(name), True
     return None, False
 
 
@@ -75,21 +73,21 @@ def find_id_or_static_words():
             s += text[i]
             up_i()
         if s in static_words.keys():
-            return Lex(static_words[s]), True
+            return Lexem(static_words[s]), True
         else:
-            return Lex('ID', s), True
+            return Lexem('ID', s), True
     return None, False
 
 
 def find_consts():
     global i, text
-    if is_digit_not_zero(text[i]):
+    if is_digit(text[i]):
         s = text[i]
         up_i()
         while is_digit(text[i]):
             s += text[i]
             up_i()
-        return Lex('DEC', s), True
+        return Lexem('DEC', s), True
     return None, False
 
 
@@ -99,15 +97,15 @@ def find_consts_hex():
         s = text[i:i + 2]
         up_i()
         up_i()
-        if is_digit_16_not_zero(text[i]):
+        if is_digit_16(text[i]):
             s += text[i]
             up_i()
             while is_digit_16(text[i]):
                 s += text[i]
                 up_i()
-            return Lex('HEX', s), True
+            return Lexem('HEX', s), True
         else:
-            return Lex('HEX', '0x0'), True
+            return Lexem('HEX', '0x0'), True
     return None, False
 
 
@@ -137,7 +135,7 @@ def next_lex():
     lex, ok = find_consts_hex()
     if ok:
         return lex
-    return Lex('EOF')
+    return Lexem('EOF')
 
 
 def read_lex():
@@ -165,3 +163,17 @@ def read_second_lex():
     lex = next_lex()
     i, col, row = tmp_i, tmp_col, tmp_row
     return lex
+
+
+def test(path: str):
+    load_file(path)
+    lex = next_lex()
+    while lex.name != 'EOF' and lex.name != 'ERROR':
+        print(lex)
+        lex = next_lex()
+    print(lex)
+    print()
+
+
+if __name__ == '__main__':
+    test('examples/code.c')
