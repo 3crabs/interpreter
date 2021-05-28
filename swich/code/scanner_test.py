@@ -16,5 +16,5 @@ if __name__ == '__main__':
     # test('examples/hex.c')
     # test('examples/math.c')
     # test('examples/print.c')
-    test('examples/switch.c')
-    # test('examples/types.c')
+    # test('examples/switch.c')
+    test('examples/types.c')
