@@ -6,6 +6,7 @@ LOG_LEXER = False
 LOG_TREE = False
 GLOBAL_FLAG = False
 RETURN_FLAG = False
+BREAK_FLAG = False
 
 main_tree: Tree
 current_tree_node: Tree
@@ -109,7 +110,7 @@ def variable():
 
 
 def composite_operator(switch_v=None, flag=None):
-    global main_tree, current_tree_node, GLOBAL_FLAG, RETURN_FLAG
+    global main_tree, current_tree_node, GLOBAL_FLAG, RETURN_FLAG, BREAK_FLAG
     if LOG_LEXER:
         print('composite_operator')
     if next_lexem().name != 'CURLY_LEFT':
@@ -126,6 +127,13 @@ def composite_operator(switch_v=None, flag=None):
         if read_lexem().name == 'RETURN':
             if GLOBAL_FLAG:
                 RETURN_FLAG = True
+            GLOBAL_FLAG = False
+            next_lexem()
+            next_lexem()
+            run = True
+        if read_lexem().name == 'BREAK':
+            if GLOBAL_FLAG:
+                BREAK_FLAG = True
             GLOBAL_FLAG = False
             next_lexem()
             next_lexem()
@@ -148,9 +156,11 @@ def composite_operator(switch_v=None, flag=None):
             if next_lexem().name != 'ROUND_RIGHT':
                 error('ожидался )')
             save_f = GLOBAL_FLAG
+            save_bf = BREAK_FLAG
             GLOBAL_FLAG = False
             composite_operator(v, save_f)
             GLOBAL_FLAG = save_f and not RETURN_FLAG
+            BREAK_FLAG = save_bf
             run = True
         elif read_lexem().name == 'CASE':
             next_lexem()
