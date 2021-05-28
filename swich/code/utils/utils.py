@@ -5,7 +5,8 @@ static_words = {
     'int': 'INT',
     'break': 'BREAK',
     'default': 'DEFAULT',
-    'case': 'CASE'
+    'case': 'CASE',
+    'return': 'RETURN'
 }
 
 one_symbols = {

@@ -1,24 +1,20 @@
-void main() {
-    switch (2) {
+int res;
+
+void fun(int n) {
+    switch (n) {
     case 1:
-        switch (1) {
-        case 1:
-            int a = 1;
-        case 2:
-            int b = 2;
-        }
-    case 2:
-        switch (1) {
-        case 1:
-            int a = 1;
-        case 2:
-            int b = 2;
-        }
-    case 3:
-        int c = 3;
-    case 4:
-        int d = 4;
+        int a = n;
+        return;
+        int b = 100 / 0;
     default:
-        int e = 5;
+        res = res * n;
+        fun(n-1);
+        return;
     }
+    int c = 100000;
+}
+
+void main() {
+    res = 1;
+    fun(5);
 }

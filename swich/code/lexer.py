@@ -108,7 +108,7 @@ def variable():
         error('ожидался ;')
 
 
-def composite_operator(switch_v=None):
+def composite_operator(switch_v=None, flag=None):
     global main_tree, current_tree_node, GLOBAL_FLAG, RETURN_FLAG
     if LOG_LEXER:
         print('composite_operator')
@@ -130,7 +130,7 @@ def composite_operator(switch_v=None):
             next_lexem()
             next_lexem()
             run = True
-        if read_lexem().name == 'ID':
+        elif read_lexem().name == 'ID':
             save_i, save_col, save_row = get_state()
             next_lexem()
             if read_lexem().name == 'ROUND_LEFT':
@@ -140,7 +140,7 @@ def composite_operator(switch_v=None):
                 set_state(save_i, save_col, save_row)
                 assign_var()
             run = True
-        if read_lexem().name == 'SWITCH':
+        elif read_lexem().name == 'SWITCH':
             next_lexem()
             if next_lexem().name != 'ROUND_LEFT':
                 error('ожидался (')
@@ -149,27 +149,27 @@ def composite_operator(switch_v=None):
                 error('ожидался )')
             save_f = GLOBAL_FLAG
             GLOBAL_FLAG = False
-            composite_operator(v)
-            GLOBAL_FLAG = save_f
+            composite_operator(v, save_f)
+            GLOBAL_FLAG = save_f and not RETURN_FLAG
             run = True
-        if read_lexem().name == 'CASE':
+        elif read_lexem().name == 'CASE':
             next_lexem()
             v = exp()
             if switch_v == v:
-                GLOBAL_FLAG = True
+                GLOBAL_FLAG = True and flag
             if next_lexem().name != 'COLON':
                 error('ожидался :')
             run = True
-        if read_lexem().name == 'DEFAULT':
+        elif read_lexem().name == 'DEFAULT':
             next_lexem()
-            GLOBAL_FLAG = not GLOBAL_FLAG
+            GLOBAL_FLAG = not GLOBAL_FLAG and flag and not RETURN_FLAG
             if next_lexem().name != 'COLON':
                 error('ожидался :')
             run = True
-        if is_type(read_lexem().name):
+        elif is_type(read_lexem().name):
             variable()
             run = True
-        if run is False:
+        elif run is False:
             if read_lexem().name == 'CURLY_RIGHT':
                 next_lexem()
             else:
@@ -236,24 +236,24 @@ def run_function(function_tree, params):
     function_i, function_cal, function_row = function_tree.node.get_position()
     set_state(function_i, function_cal, function_row)
     save_tree = current_tree_node
-    current_tree = function_tree.right
-    while current_tree.left:
-        current_tree = current_tree.left
+    current_tree_node = function_tree.right
+    while current_tree_node.left:
+        current_tree_node = current_tree_node.left
 
     old_params = []
     for i in range(len(function_tree.node.params)):
         name = function_tree.node.params[i]["var_name"]
-        old_params.append(current_tree.find_var(name).node.value)
+        old_params.append(current_tree_node.find_var(name).node.value)
 
     for i in range(len(function_tree.node.params)):
         name = function_tree.node.params[i]["var_name"]
-        current_tree.find_var(name).node.value = str(params[i])
+        current_tree_node.find_var(name).node.value = str(params[i])
 
     composite_operator()
 
     for i in range(len(function_tree.node.params)):
         name = function_tree.node.params[i]["var_name"]
-        current_tree.find_var(name).node.value = str(old_params[i])
+        current_tree_node.find_var(name).node.value = str(old_params[i])
 
     set_state(old_i, old_cal, old_row)
     RETURN_FLAG = save_return_flag
